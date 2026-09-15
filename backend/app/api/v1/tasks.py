@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.services.scoring_service import score_task_completion
 from app.models.subtask import Subtask
 from app.models.tag import Tag
 from app.models.task import Task
@@ -108,6 +109,11 @@ async def create_task(
     _apply_status_side_effects(task, payload.status)
     db.add(task)
     await db.commit()
+
+    if task.status == "done":
+        await score_task_completion(db, task)
+        await db.commit()
+
     return await _get_owned_task(task.id, current_user, db)
 
 
@@ -128,6 +134,7 @@ async def update_task(
     db: AsyncSession = Depends(get_db),
 ) -> Task:
     task = await _get_owned_task(task_id, current_user, db)
+    was_done = task.status == "done"
     data = payload.model_dump(exclude_unset=True)
 
     if "tag_ids" in data:
@@ -139,6 +146,11 @@ async def update_task(
     _apply_status_side_effects(task, new_status)
 
     await db.commit()
+
+    if new_status == "done" and not was_done:
+        await score_task_completion(db, task)
+        await db.commit()
+
     return await _get_owned_task(task_id, current_user, db)
 
 
