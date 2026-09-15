@@ -49,8 +49,8 @@ async def _resolve_tags(tag_ids: list[uuid.UUID], user: User, db: AsyncSession) 
     return tags
 
 
-def _apply_status_side_effects(task: Task, new_status: str | None) -> None:
-    if new_status is None or new_status == task.status:
+def _apply_status_side_effects(task: Task, old_status: str | None, new_status: str | None) -> None:
+    if new_status is None or new_status == old_status:
         return
     now = datetime.now(timezone.utc)
     if new_status == "done" and task.completed_at is None:
@@ -106,7 +106,7 @@ async def create_task(
         due_date=payload.due_date,
         tags=tags,
     )
-    _apply_status_side_effects(task, payload.status)
+    _apply_status_side_effects(task, None, payload.status)
     db.add(task)
     await db.commit()
 
@@ -134,7 +134,7 @@ async def update_task(
     db: AsyncSession = Depends(get_db),
 ) -> Task:
     task = await _get_owned_task(task_id, current_user, db)
-    was_done = task.status == "done"
+    old_status = task.status
     data = payload.model_dump(exclude_unset=True)
 
     if "tag_ids" in data:
@@ -143,11 +143,11 @@ async def update_task(
     new_status = data.get("status")
     for field, value in data.items():
         setattr(task, field, value)
-    _apply_status_side_effects(task, new_status)
+    _apply_status_side_effects(task, old_status, new_status)
 
     await db.commit()
 
-    if new_status == "done" and not was_done:
+    if new_status == "done" and old_status != "done":
         await score_task_completion(db, task)
         await db.commit()
 
