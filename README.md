@@ -17,7 +17,7 @@ behalf and attach findings to a task.
 | AI chat | Google Gemini (`gemini-3.6-flash`) |
 | Web research | Tavily |
 
-Everything is designed to run on free tiers: Neon (DB), Render (backend),
+Everything is designed to run on free tiers: Neon (DB), Railway (backend),
 Vercel (frontend).
 
 ## Repo layout
@@ -70,28 +70,42 @@ streak_bonus    = +5 per consecutive day with >=1 task completed (computed once 
 
 Nothing to do here beyond the connection string already in use for local dev.
 
-### 2. Backend — Render
+### 2. Backend — Railway
 
-1. [render.com](https://render.com) → **New +** → **Web Service** → connect this GitHub repo
-2. **Root directory**: `backend`
-3. **Build command**: `pip install -r requirements.txt`
-4. **Start command**: `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-5. **Instance type**: Free
-6. Environment variables (Render → your service → Environment):
+**Live at:** `https://ai-powered-task-tracker-with-scoring-dashboard-production.up.railway.app`
 
-   | Key | Value |
-   |---|---|
-   | `DATABASE_URL` | your Neon connection string, `postgresql+asyncpg://...?ssl=require` (note: `+asyncpg` driver, and `ssl=require` not `sslmode=require`) |
-   | `JWT_SECRET` | a long random string (don't reuse the local dev one) |
-   | `JWT_ALGORITHM` | `HS256` |
-   | `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` |
-   | `GEMINI_API_KEY` | your Gemini key |
-   | `TAVILY_API_KEY` | your Tavily key |
-   | `CORS_ORIGINS` | your Vercel URL once deployed, e.g. `https://your-app.vercel.app` (comma-separate if you need more than one) |
+We tried Render first, but the workspace's payment method had been removed and
+Render requires card verification to create *any* service — even free ones —
+so we moved to Railway instead (a $5-credit/30-day trial, not a permanent
+free tier, but card-free to start).
 
-7. Deploy. Render gives you a URL like `https://ai-task-tracker-api.onrender.com` — note it for step 3.
+To redeploy or reproduce this setup:
 
-Free-tier Render web services sleep after inactivity and take ~30–60s to wake on the next request — expected, not a bug.
+1. [railway.com](https://railway.com) → sign in with GitHub → **New Project** →
+   **GitHub Repository** → select this repo (first time: you'll need to
+   install/authorize the Railway GitHub App — `Configure GitHub App` in the
+   repo picker if it shows no repos)
+2. On the service → **Settings → Source**: set **Root Directory** to `backend`
+3. **Settings → Build**: Custom Build Command → `pip install -r requirements.txt`
+4. **Settings → Deploy**: Custom Start Command →
+   `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. **Variables** tab: Railway auto-detects the variable names from
+   `app/core/config.py` as "Suggested Variables" — fill in `DATABASE_URL`
+   (Neon connection string, `postgresql+asyncpg://...?ssl=require` — note the
+   `+asyncpg` driver and `ssl=require`, not `sslmode=require`), `GEMINI_API_KEY`,
+   `TAVILY_API_KEY`; `JWT_SECRET` auto-fills with a generated secret,
+   `JWT_ALGORITHM`/`ACCESS_TOKEN_EXPIRE_MINUTES`/`CORS_ORIGINS` auto-fill with
+   sensible defaults (update `CORS_ORIGINS` per step 4 below). Click **Add**
+   to save the suggested variables — typing into them alone doesn't persist.
+6. **Settings → Networking**: **Generate Domain** (port `8080` — Railway maps
+   this to the `$PORT` your start command already reads)
+7. Click **Deploy** to apply all staged settings/variables together.
+
+Gotcha we hit: the build failed the first time with
+`ValueError: the greenlet library is required to use this function` during
+the Alembic migration step — `greenlet` was present locally as a transitive
+dependency but wasn't pinned in `requirements.txt`, so a different resolver
+didn't install it. Fixed by adding `greenlet==3.5.6` explicitly.
 
 ### 3. Frontend — Vercel
 
@@ -101,10 +115,12 @@ Free-tier Render web services sleep after inactivity and take ~30–60s to wake 
 
    | Key | Value |
    |---|---|
-   | `NEXT_PUBLIC_API_URL` | the Render backend URL from step 2, no trailing slash |
+   | `NEXT_PUBLIC_API_URL` | the Railway backend URL from step 2, no trailing slash |
 
 4. Deploy. Vercel gives you a URL like `https://your-app.vercel.app`.
 
 ### 4. Close the loop
 
-Go back to Render and set `CORS_ORIGINS` to the real Vercel URL from step 3 (it won't be known until after the frontend's first deploy), then redeploy the backend so CORS actually allows requests from it.
+Go back to Railway (Variables tab) and set `CORS_ORIGINS` to the real Vercel
+URL from step 3 (it won't be known until after the frontend's first deploy),
+then redeploy so CORS actually allows requests from it.
