@@ -23,8 +23,7 @@ export function SubtaskChecklist({
 
   const done = subtasks.filter((s) => s.is_done).length;
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitSubtask() {
     if (!newTitle.trim()) return;
     setAdding(true);
     try {
@@ -69,10 +68,22 @@ export function SubtaskChecklist({
         ))}
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitSubtask();
+        }}
+        className="flex gap-2"
+      >
         <Input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submitSubtask();
+            }
+          }}
           placeholder="Add a subtask..."
           className="h-8 text-sm"
         />

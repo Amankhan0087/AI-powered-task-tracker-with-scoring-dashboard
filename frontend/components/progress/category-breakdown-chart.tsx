@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartTooltipContent } from "@/components/progress/chart-tooltip";
 import type { CategoryBreakdownItem } from "@/lib/progress";
 
@@ -39,7 +39,7 @@ export function CategoryBreakdownChart({ data }: { data: CategoryBreakdownItem[]
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={slots} layout="vertical" margin={{ top: 4, right: 24, bottom: 0, left: 0 }}>
+      <BarChart data={slots} layout="vertical" margin={{ top: 4, right: 36, bottom: 0, left: 0 }}>
         <XAxis type="number" hide allowDecimals={false} />
         <YAxis
           type="category"
@@ -70,6 +70,13 @@ export function CategoryBreakdownChart({ data }: { data: CategoryBreakdownItem[]
           {slots.map((entry, index) => (
             <Cell key={entry.category_id ?? entry.category_name} fill={CATEGORICAL_COLORS[index % CATEGORICAL_COLORS.length]} />
           ))}
+          <LabelList
+            dataKey="score"
+            position="right"
+            formatter={(v) => (typeof v === "number" ? Math.round(v).toString() : v)}
+            fill={AXIS_COLOR}
+            fontSize={12}
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

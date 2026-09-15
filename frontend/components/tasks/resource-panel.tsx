@@ -31,8 +31,7 @@ export function ResourcePanel({
   const [value, setValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitResource() {
     if (!value.trim()) return;
     setSubmitting(true);
     try {
@@ -47,6 +46,13 @@ export function ResourcePanel({
       setAdding(false);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function handleFieldKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitResource();
     }
   }
 
@@ -107,7 +113,13 @@ export function ResourcePanel({
       </div>
 
       {adding && (
-        <form onSubmit={handleAdd} className="space-y-2 rounded-md border border-border p-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitResource();
+          }}
+          className="space-y-2 rounded-md border border-border p-2"
+        >
           <div className="flex gap-2">
             <Select value={type} onValueChange={(v) => setType(v as ResourceType)}>
               <SelectTrigger className="h-8 w-28 text-xs">
@@ -122,6 +134,7 @@ export function ResourcePanel({
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleFieldKeyDown}
               placeholder="Title (optional)"
               className="h-8 text-xs"
             />
@@ -138,6 +151,7 @@ export function ResourcePanel({
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              onKeyDown={handleFieldKeyDown}
               placeholder="https://..."
               className="h-8 text-xs"
             />

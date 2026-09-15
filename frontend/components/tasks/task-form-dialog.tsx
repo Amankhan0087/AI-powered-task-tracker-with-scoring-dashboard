@@ -21,18 +21,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Category, TaskCreateInput, TaskPriority } from "@/lib/types";
+import { createCategory } from "@/lib/tasks";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 
 export function TaskFormDialog({
   open,
   onOpenChange,
   categories,
   onCreate,
+  onCategoryCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categories: Category[];
   onCreate: (input: TaskCreateInput) => Promise<void>;
+  onCategoryCreated: (category: Category) => void;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -42,6 +46,9 @@ export function TaskFormDialog({
   const [dueDate, setDueDate] = useState("");
   const [estimatedHours, setEstimatedHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   const [prevOpen, setPrevOpen] = useState(open);
   if (open !== prevOpen) {
@@ -54,6 +61,25 @@ export function TaskFormDialog({
       setDifficulty(1);
       setDueDate("");
       setEstimatedHours("");
+      setAddingCategory(false);
+      setNewCategoryName("");
+    }
+  }
+
+  async function submitNewCategory() {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setCreatingCategory(true);
+    try {
+      const category = await createCategory(name);
+      onCategoryCreated(category);
+      setCategoryId(category.id);
+      setNewCategoryName("");
+      setAddingCategory(false);
+    } catch {
+      toast.error("Couldn't create that category.");
+    } finally {
+      setCreatingCategory(false);
     }
   }
 
@@ -106,20 +132,55 @@ export function TaskFormDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "none")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label>Category</Label>
+                  <button
+                    type="button"
+                    onClick={() => setAddingCategory((v) => !v)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Plus className="h-3 w-3" />
+                    New
+                  </button>
+                </div>
+                {addingCategory ? (
+                  <div className="flex gap-1.5">
+                    <Input
+                      autoFocus
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          submitNewCategory();
+                        }
+                      }}
+                      placeholder="Category name"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={creatingCategory || !newCategoryName.trim()}
+                      onClick={submitNewCategory}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                ) : (
+                  <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "none")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="space-y-2">

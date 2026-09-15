@@ -137,6 +137,7 @@ function TasksContent() {
           await createTask(input);
           await refresh();
         }}
+        onCategoryCreated={(category) => setCategories((prev) => [...prev, category])}
       />
 
       <TaskDetailDrawer
