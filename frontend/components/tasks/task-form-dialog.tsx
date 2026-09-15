@@ -104,7 +104,7 @@ export function TaskFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "none")}>
@@ -138,7 +138,7 @@ export function TaskFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Difficulty (1-5)</Label>
                 <Select value={String(difficulty)} onValueChange={(v) => setDifficulty(Number(v))}>

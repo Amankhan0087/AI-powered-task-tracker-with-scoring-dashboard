@@ -40,6 +40,13 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     } catch {
       // no JSON body
     }
+
+    if (res.status === 401 && token && typeof window !== "undefined") {
+      clearToken();
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- plain utility module, no router available; a hard redirect also resets all React state after auth failure
+      window.location.href = "/login";
+    }
+
     throw new ApiError(res.status, detail);
   }
 

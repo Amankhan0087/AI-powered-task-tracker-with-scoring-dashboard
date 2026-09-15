@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { clearToken } from "@/lib/api";
 
 const LINKS = [
-  { href: "/", label: "Overview" },
-  { href: "/tasks", label: "Tasks" },
-  { href: "/progress", label: "Progress" },
-  { href: "/ai-assistant", label: "AI Assistant" },
+  { href: "/", label: "Overview", short: "Home" },
+  { href: "/tasks", label: "Tasks", short: "Tasks" },
+  { href: "/progress", label: "Progress", short: "Progress" },
+  { href: "/ai-assistant", label: "AI Assistant", short: "AI" },
 ];
 
 export function NavBar() {
@@ -24,22 +24,23 @@ export function NavBar() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <nav className="flex items-center gap-1">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:px-4">
+        <nav className="flex min-w-0 items-center gap-0.5 overflow-x-auto sm:gap-1">
           {LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+                "shrink-0 rounded-md px-2 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-3",
                 pathname === link.href && "bg-secondary text-foreground"
               )}
             >
-              {link.label}
+              <span className="sm:hidden">{link.short}</span>
+              <span className="hidden sm:inline">{link.label}</span>
             </Link>
           ))}
         </nav>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
+        <Button variant="ghost" size="sm" className="shrink-0" onClick={handleLogout}>
           Log out
         </Button>
       </div>
