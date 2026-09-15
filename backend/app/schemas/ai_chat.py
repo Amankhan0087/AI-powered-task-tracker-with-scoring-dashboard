@@ -28,6 +28,7 @@ class ChatRequest(BaseModel):
     conversation_id: uuid.UUID | None = None
     message: str
     task_id: uuid.UUID | None = None
+    use_research: bool = False
 
 
 class ChatResponse(BaseModel):

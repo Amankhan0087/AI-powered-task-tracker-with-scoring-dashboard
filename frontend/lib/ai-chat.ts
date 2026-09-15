@@ -7,11 +7,17 @@ export interface Conversation {
   created_at: string;
 }
 
+export interface ResearchSource {
+  title: string;
+  url: string;
+  content: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  sources: unknown | null;
+  sources: ResearchSource[] | null;
   created_at: string;
 }
 
@@ -28,7 +34,12 @@ export function listMessages(conversationId: string) {
   return apiFetch<ChatMessage[]>(`/api/v1/ai_chat/conversations/${conversationId}/messages`);
 }
 
-export function sendChatMessage(input: { conversation_id?: string | null; message: string; task_id?: string | null }) {
+export function sendChatMessage(input: {
+  conversation_id?: string | null;
+  message: string;
+  task_id?: string | null;
+  use_research?: boolean;
+}) {
   return apiFetch<ChatResponse>("/api/v1/ai_chat/chat", {
     method: "POST",
     body: JSON.stringify(input),

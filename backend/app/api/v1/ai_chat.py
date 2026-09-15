@@ -9,7 +9,7 @@ from app.core.security import get_current_user
 from app.models.ai_chat import AIConversation, AIMessage
 from app.models.user import User
 from app.schemas.ai_chat import ChatRequest, ChatResponse, ConversationRead, MessageRead
-from app.services import gemini_service
+from app.services import gemini_service, tavily_service
 
 router = APIRouter(prefix="/api/v1/ai_chat", tags=["ai_chat"])
 
@@ -83,14 +83,27 @@ async def chat(
     db.add(user_message)
     await db.commit()
 
+    sources: list[dict] | None = None
+    if payload.use_research:
+        try:
+            sources = await tavily_service.research(payload.message)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Web research is unavailable: {exc}"
+            ) from exc
+
+    research_context = tavily_service.format_research_context(sources) if sources else None
+
     try:
-        reply_text = await gemini_service.chat(payload.message, history)
+        reply_text = await gemini_service.chat(payload.message, history, research_context)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=f"AI assistant is unavailable: {exc}"
         ) from exc
 
-    assistant_message = AIMessage(conversation_id=conversation.id, role="assistant", content=reply_text)
+    assistant_message = AIMessage(
+        conversation_id=conversation.id, role="assistant", content=reply_text, sources=sources
+    )
     db.add(assistant_message)
     await db.commit()
     await db.refresh(assistant_message)

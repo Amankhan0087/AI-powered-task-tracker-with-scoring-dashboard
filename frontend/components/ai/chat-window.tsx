@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MessageBubble } from "@/components/ai/message-bubble";
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, Globe } from "lucide-react";
 import { listMessages, sendChatMessage, type ChatMessage } from "@/lib/ai-chat";
 
 export function ChatWindow({
@@ -20,6 +21,7 @@ export function ChatWindow({
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [useResearch, setUseResearch] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const [prevConversationId, setPrevConversationId] = useState(conversationId);
@@ -58,7 +60,11 @@ export function ChatWindow({
     setSending(true);
 
     try {
-      const res = await sendChatMessage({ conversation_id: conversationId, message: trimmed });
+      const res = await sendChatMessage({
+        conversation_id: conversationId,
+        message: trimmed,
+        use_research: useResearch,
+      });
       setMessages((prev) => [...prev, res.message]);
       if (!conversationId) {
         onConversationCreated(res.conversation_id);
@@ -88,7 +94,7 @@ export function ChatWindow({
           {sending && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              Thinking...
+              {useResearch ? "Searching the web..." : "Thinking..."}
             </div>
           )}
           <div ref={bottomRef} />
@@ -96,6 +102,11 @@ export function ChatWindow({
       </ScrollArea>
 
       <div className="border-t border-border p-3">
+        <label className="mb-2 flex w-fit items-center gap-2 text-xs text-muted-foreground">
+          <Checkbox checked={useResearch} onCheckedChange={(c) => setUseResearch(c === true)} />
+          <Globe className="h-3.5 w-3.5" />
+          Search the web for current information
+        </label>
         <form
           onSubmit={(e) => {
             e.preventDefault();
