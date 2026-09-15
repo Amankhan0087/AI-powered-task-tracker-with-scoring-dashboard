@@ -1,0 +1,38 @@
+# --- Python / backend ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+backend/.env
+backend/*.db
+
+# --- Node / frontend ---
+node_modules/
+.next/
+out/
+frontend/.env
+frontend/.env.local
+frontend/.env*.local
+npm-debug.log*
+
+# --- Alembic ---
+backend/app/alembic/versions/__pycache__/
+
+# --- Env files (never commit real secrets) ---
+.env
+.env.local
+*.env
+!.env.example
+!**/.env.example
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
