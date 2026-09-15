@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, categories, progress, scoring, tags, tasks
+from app.api.v1 import ai_chat, auth, categories, progress, scoring, tags, tasks
 from app.core.config import settings
 from app.services.nightly_job import run_nightly_refresh_loop
 
@@ -32,6 +32,7 @@ app.include_router(tags.router)
 app.include_router(tasks.router)
 app.include_router(scoring.router)
 app.include_router(progress.router)
+app.include_router(ai_chat.router)
 
 
 @app.get("/api/v1/health")
