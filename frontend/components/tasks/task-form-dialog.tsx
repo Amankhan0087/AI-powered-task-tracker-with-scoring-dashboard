@@ -23,7 +23,7 @@ import {
 import type { Category, TaskCreateInput, TaskPriority } from "@/lib/types";
 import { createCategory } from "@/lib/tasks";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 export function TaskFormDialog({
   open,
@@ -49,6 +49,7 @@ export function TaskFormDialog({
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [justCreatedCategory, setJustCreatedCategory] = useState<Category | null>(null);
 
   const [prevOpen, setPrevOpen] = useState(open);
   if (open !== prevOpen) {
@@ -63,6 +64,7 @@ export function TaskFormDialog({
       setEstimatedHours("");
       setAddingCategory(false);
       setNewCategoryName("");
+      setJustCreatedCategory(null);
     }
   }
 
@@ -72,10 +74,11 @@ export function TaskFormDialog({
     setCreatingCategory(true);
     try {
       const category = await createCategory(name);
-      onCategoryCreated(category);
+      setJustCreatedCategory(category);
       setCategoryId(category.id);
       setNewCategoryName("");
       setAddingCategory(false);
+      onCategoryCreated(category);
     } catch {
       toast.error("Couldn't create that category.");
     } finally {
@@ -165,6 +168,20 @@ export function TaskFormDialog({
                     >
                       Add
                     </Button>
+                  </div>
+                ) : justCreatedCategory && categoryId === justCreatedCategory.id ? (
+                  <div className="flex h-8 items-center justify-between rounded-lg border border-input px-2.5 text-sm">
+                    {justCreatedCategory.name}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJustCreatedCategory(null);
+                        setCategoryId("none");
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ) : (
                   <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "none")}>
