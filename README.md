@@ -109,8 +109,12 @@ didn't install it. Fixed by adding `greenlet==3.5.6` explicitly.
 
 ### 3. Frontend — Vercel
 
+**Live at:** `https://ai-powered-task-tracker-with-scorin.vercel.app`
+
 1. [vercel.com](https://vercel.com) → **Add New → Project** → import this GitHub repo
-2. **Root directory**: `frontend` (Next.js is auto-detected)
+   (first time: click **Install** to grant the Vercel GitHub App access to the repo)
+2. **Root directory**: `frontend` — Vercel auto-detects this from the monorepo
+   layout and auto-detects the Next.js framework preset too
 3. Environment variable:
 
    | Key | Value |
@@ -121,6 +125,11 @@ didn't install it. Fixed by adding `greenlet==3.5.6` explicitly.
 
 ### 4. Close the loop
 
-Go back to Railway (Variables tab) and set `CORS_ORIGINS` to the real Vercel
-URL from step 3 (it won't be known until after the frontend's first deploy),
-then redeploy so CORS actually allows requests from it.
+Go back to Railway (Variables tab) and set `CORS_ORIGINS` to a comma-separated
+list including the real Vercel URL from step 3 (it won't be known until after
+the frontend's first deploy) — e.g.
+`http://localhost:3000,https://your-app.vercel.app` — then redeploy so CORS
+actually allows requests from it. Skipping this step doesn't break the build;
+it just makes every request from the deployed frontend fail with a generic
+"Something went wrong" (a browser-blocked CORS error, not a 4xx/5xx from the
+API), which only shows up once you actually click around the live site.
